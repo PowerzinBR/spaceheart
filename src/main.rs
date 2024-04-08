@@ -1,5 +1,4 @@
 use ansi_term::Colour;
-use dialoguer::{theme::ColorfulTheme, Select};
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
@@ -12,8 +11,7 @@ struct Config {
 
 impl Config {
     fn new() -> Config {
-        // Set default colors and prompt character
-        let default_directory_color = Colour::RGB(0, 255, 0); // Green
+        let default_directory_color = Colour::RGB(255, 51, 51); // red
         let default_prompt_character = String::from("❯");
 
         Config {
@@ -24,10 +22,8 @@ impl Config {
 }
 
 fn main() {
-    // Initialize config with default values
     let config = Config::new();
 
-    // Read aliases from shell configuration files
     let mut aliases: Vec<String> = Vec::new();
     if let Some(home_dir) = dirs::home_dir() {
         if let Ok(file) = File::open(home_dir.join(".bashrc")) {
@@ -39,40 +35,32 @@ fn main() {
     }
 
     loop {
-        // Get current directory
         let current_dir = env::current_dir().unwrap_or_default();
         let current_dir_str = current_dir.to_str().unwrap_or("");
 
-        // Replace absolute path with ~/<dir>
         let home_dir = dirs::home_dir().unwrap_or_default();
         let home_dir_str = home_dir.to_str().unwrap_or("");
         let current_dir_str = current_dir_str.replace(home_dir_str, "~");
 
-        // Construct the prompt strings
         let directory_line = format!("{}", config.directory_color.paint(current_dir_str));
         let prompt_line = format!("{}", config.prompt_character);
 
-        // Print the prompt with background color and rounded borders
         print!("{} ", directory_line);
         print!("{} ", prompt_line);
         io::stdout().flush().unwrap();
 
-        // Read user input
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
         let input = input.trim();
 
-        // Check if the user wants to exit
         if input == "exit" {
             break;
         }
 
-        // Handle blank lines
         if input.is_empty() {
             continue;
         }
 
-        // Check if the entered command is an alias
         if let Some(alias_cmd) = find_alias_command(&input, &aliases) {
             if let Err(err) = alias_cmd.execute() {
                 eprintln!("Failed to execute command: {}", err);
@@ -80,12 +68,10 @@ fn main() {
             continue;
         }
 
-        // Split the input into command and arguments
         let mut parts = input.split_whitespace();
         let command = parts.next().unwrap_or("");
         let args: Vec<&str> = parts.collect();
 
-        // Run the command
         let mut child = Command::new(command)
             .args(&args)
             .stdin(Stdio::inherit())
@@ -94,7 +80,6 @@ fn main() {
             .spawn()
             .expect("Failed to execute command");
 
-        // Wait for the command to finish
         child.wait().expect("Command execution failed");
     }
 }
@@ -159,4 +144,3 @@ fn find_alias_command<'a>(
     }
     None
 }
-
