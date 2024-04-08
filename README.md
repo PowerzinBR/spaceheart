@@ -6,4 +6,4 @@ I created this project to test it out and it fits some of the ideas of applicati
 Thanks for reading it.
 
 Here's how it looks:
-<img src="/images/result.png" />
+<img src="./images/result.png" />
